@@ -1,0 +1,101 @@
+ transmission-openvpn:
+    image: haugene/transmission-openvpn
+    container_name: transmission-openvpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      - OPENVPN_PROVIDER=PIA
+      - OPENVPN_USERNAME=p8323281
+      - OPENVPN_PASSWORD=maGnhdp8oF
+      - OPENVPN_CONFIG=/interface/pia/us_east
+      - LOCAL_NETWORK=192.168.1.0/24  # Change this to your local network
+    volumes:
+      - /path/to/your/transmission/config:/data
+      - /path/to/your/torrents:/downloads
+    ports:
+      - 9091:9091
+services:
+  transmission-openvpn:
+    image: haugene/transmission-openvpn
+    container_name: transmission-openvpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      - OPENVPN_PROVIDER=YOUR_VPN_PROVIDER
+      - OPENVPN_USERNAME=YOUR_VPN_USERNAME
+      - OPENVPN_PASSWORD=YOUR_VPN_PASSWORD
+      - OPENVPN_CONFIG=YOUR_VPN_CONFIG_FILE
+      - LOCAL_NETWORK=192.168.1.0/24 # Change this to your local network
+    volumes:
+      - /path/to/your/transmission/config:/data
+      - /path/to/your/torrents:/downloads
+    ports:
+      - 9091:9091
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://ipinfo.io || exit 1"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  transmission:
+    image: linuxserver/transmission
+    container_name: transmission
+    depends_on:
+      transmission-openvpn:
+        condition: service_healthy
+    volumes:
+      - /path/to/your/transmission/config:/config
+      - /path/to/your/torrents:/downloads
+    ports:
+      - 9091:9091
+    restart: unless-stopped
+
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London  # Change to your timezone
+    volumes:
+      - /path/to/your/sonarr/config:/config
+      - /path/to/your/tvshows:/tv
+      - /path/to/your/torrents:/downloads
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London  # Change to your timezone
+    volumes:
+      - /path/to/your/radarr/config:/config
+      - /path/to/your/movies:/movies
+      - /path/to/your/torrents:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  jackett:
+    image: linuxserver/jackett
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London  # Change to your timezone
+    volumes:
+      - /path/to/your/jackett/config:/config
+      - /path/to/your/jackett/downloads:/downloads
+    ports:
+      - 9117:9117
+    restart: unless-stopped
